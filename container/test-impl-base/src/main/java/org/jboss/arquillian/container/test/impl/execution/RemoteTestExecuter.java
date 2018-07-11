@@ -22,12 +22,15 @@ import org.jboss.arquillian.container.spi.client.container.DeployableContainer;
 import org.jboss.arquillian.container.spi.client.deployment.DeploymentDescription;
 import org.jboss.arquillian.container.spi.client.deployment.DeploymentScenario;
 import org.jboss.arquillian.container.spi.client.protocol.metadata.ProtocolMetaData;
+import org.jboss.arquillian.container.spi.client.protocol.metadata.HTTPContext;
+import org.jboss.arquillian.container.spi.client.protocol.metadata.Servlet;
+import org.jboss.arquillian.container.spi.client.protocol.ProtocolDescription;
 import org.jboss.arquillian.container.test.impl.domain.ProtocolDefinition;
 import org.jboss.arquillian.container.test.impl.domain.ProtocolRegistry;
 import org.jboss.arquillian.container.test.impl.execution.event.RemoteExecutionEvent;
 import org.jboss.arquillian.container.test.spi.ContainerMethodExecutor;
 import org.jboss.arquillian.container.test.spi.client.protocol.Protocol;
-import org.jboss.arquillian.container.test.spi.client.protocol.ProtocolConfiguration;
+import org.jboss.arquillian.container.test.spi.client.protocol.ProtocolConfiguration;   
 import org.jboss.arquillian.container.test.spi.command.Command;
 import org.jboss.arquillian.container.test.spi.command.CommandCallback;
 import org.jboss.arquillian.core.api.Event;
@@ -86,7 +89,7 @@ public class RemoteTestExecuter {
         ProtocolRegistry protoReg = protocolRegistry.get();
 
         // if no default marked or specific protocol defined in the registry, use the DeployableContainers defaultProtocol.
-        ProtocolDefinition protocol = protoReg.getProtocol(deployment.getProtocol());
+        ProtocolDefinition protocol = protoReg.getProtocol(new ProtocolDescription("Servlet 3.0")); //deployment.getProtocol()
         if (protocol == null) {
             protocol = protoReg.getProtocol(container.getDeployableContainer().getDefaultProtocol());
         }
@@ -109,9 +112,16 @@ public class RemoteTestExecuter {
         ProtocolConfiguration protocolConfiguration) {
         final ContextSnapshot state = executorService.get().createSnapshotContext();
 
+        ProtocolMetaData metaData = new ProtocolMetaData();
+            HTTPContext context = new HTTPContext("192.168.100.47", 8080);
+		context.add(new Servlet("ArquillianServletRunner", "ArquillianServletRunner"));
+            metaData.addContext(context);
+
+
+
         ContainerMethodExecutor executor = ((Protocol) protocol.getProtocol()).getExecutor(
             protocolConfiguration,
-            protocolMetadata.get(), new CommandCallback() {
+            metaData/*protocolMetadata.get()*/, new CommandCallback() {
                 @Override
                 public void fired(Command<?> event) {
                     state.activate();

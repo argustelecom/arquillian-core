@@ -46,6 +46,11 @@ public class ClientTestExecuter {
             event.getTestClass(),
             event.getTestMethod());
 
+	//#TODO:
+	runAsClient = false;
+
+	System.out.println("ClientTestExecuter patched called!!!, deployment = " + this.deployment.get());
+	
         if (runAsClient) {
             executionEvent.fire(new LocalExecutionEvent(event.getTestMethodExecutor()));
         } else {
